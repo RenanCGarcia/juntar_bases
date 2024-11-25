@@ -150,7 +150,7 @@ class App(Functions):
         self.elements()
 
     def window_Properties(self):
-        self.window.iconbitmap(os.path.join(os.path.dirname(sys.argv[0]),'icon.ico'))
+        self.window.iconbitmap(os.path.join(os.path.dirname(sys.argv[0]),'imgs/icon.ico'))
         self.window.title("Juntar Bases")
         self.window.resizable(width=False, height=False)
         self.center_window(self.window, 1024, 768)
