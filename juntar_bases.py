@@ -1,9 +1,12 @@
 import os
 import sys
+import mysql.connector
+
 import pandas as pd
 import tkinter as tk
-from tkinter import ttk
 import customtkinter as ctk
+
+from tkinter import ttk
 from datetime import datetime
 
 
@@ -12,6 +15,39 @@ class Functions:
     bases = list()
     n_bases = 0
     total_lines = 0
+
+    def chave_mestra(aplicacao):
+        chave_mestra = {
+            'host': 'chave-mestra.cpugooo8wo0m.us-east-1.rds.amazonaws.com',
+            'database': 'chave_mestra',
+            'user': 'usuario',
+            'password': 'rr915200',
+        }
+
+        try:
+            # Estabelecer a conexão com o MySQL
+            sql = mysql.connector.connect(**chave_mestra)
+            if sql.is_connected():
+                # Criação de um cursor
+                cursor = sql.cursor()
+                consulta = "SELECT ativo FROM aplicacoes WHERE nome_aplicacao = %s"
+                cursor.execute(consulta, (aplicacao,))
+                resultado = cursor.fetchone()
+                
+                # Verificar se 'ativo' é 1 e retornar True, caso contrário, retornar False
+                if resultado and resultado[0] == 1:
+                    ativo = True
+                else:
+                    ativo = False
+                return ativo
+
+        except mysql.connector.Error as err:
+            print(err)
+            tk.messagebox.showinfo(title='Erro no Banco de Dados', message=f"Erro: não foi possível se conectar com o banco de dados AWS, entre em contato com o suporte.") # PRO USUÁRIO FINAL
+            return False
+        finally:
+            cursor.close()
+            sql.close()
 
     def center_window(self, window, h, w):
         height = h
@@ -49,6 +85,9 @@ class Functions:
             lines = 0
             if Functions.n_bases == 0:
                 first_table = pd.read_excel(self.diretory_table)
+                self.first_table_directory = directory
+                self.first_table_name = name_base
+                print('Primeiro: ', self.first_table_directory, self.first_table_name)
                 lines = len(first_table)
                 Functions.correct_columns = list(first_table.columns)
                 Functions.bases.append(self.diretory_table)
@@ -91,10 +130,10 @@ class Functions:
             atual_directory = os.path.dirname(sys.argv[0])
             data_hora_atual = datetime.now()
             data_hora_formatada = data_hora_atual.strftime('%d-%m-%Y %H-%M-%S')
-            nome_saida = f'Junção {data_hora_formatada}.xlsx'
-            if not os.path.exists(os.path.join(atual_directory, 'xlsx')):
-                    os.makedirs(os.path.join(atual_directory, 'xlsx'))
-            arquivo_saida = os.path.join(atual_directory, 'xlsx', nome_saida)
+            nome_saida = f'Junção - {self.first_table_name} etc - {data_hora_formatada}.xlsx'
+            if not os.path.exists(os.path.join(self.first_table_directory)):
+                    os.makedirs(os.path.join(self.first_table_directory))
+            arquivo_saida = os.path.join(self.first_table_directory, nome_saida)
             print(arquivo_saida)
             # Salva o DataFrame resultante em um novo arquivo Excel
             df_completo.to_excel(arquivo_saida, index=False)
@@ -174,5 +213,6 @@ class App(Functions):
     def run(self):
         self.window.mainloop()
 
-window = App()
-window.run()
+if Functions.chave_mestra('UPTECH'):
+    window = App()
+    window.run()
